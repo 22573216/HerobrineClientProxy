@@ -53,9 +53,11 @@ public class ClientProxySession implements IProxySessionNew {
 	}
 	
 	@Override
-	public void sendPacketToServer(Packet packet) {
+	public void sendPacketToVastMatcher(Packet packet) {
 		//ConsoleIO.println("ProxySessionV3::sendPacketToServer => Sending packet <"+packet.getClass().getSimpleName()+"> to server <"+serverSession.getHost()+":"+serverSession.getPort()+">");		
-		serverSession.sendPacket(packet);
+//		serverSession.sendPacket(packet);
+
+//		this.spsConnection.publish(packet); // Something like this
 	}
 	
 

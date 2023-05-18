@@ -93,7 +93,7 @@ public class ServerPluginMessagePacketBehaviour implements Behaviour<Packet> {
 		if (data.clientSentTime == -1) {
 			data.clientSentTime = currentTime;					
 			ClientPluginMessagePacket echoPacket = new ClientPluginMessagePacket(channel, data.convertToBytes());
-			proxySession.sendPacketToServer(echoPacket);
+			proxySession.sendPacketToVastMatcher(echoPacket);
 		} else {
 			data.clientReceiveTime = currentTime;
 			//log.info("HerobrineMigrationListener::echoLatencyPacket => CurrentTime <"+currentTime+"> Server <"+data.serverSentTime+","+data.serverReceiveTime+"> Serverside RTT <"+(data.serverReceiveTime - data.serverSentTime)+"> Client <"+data.clientSentTime+","+data.clientReceiveTime+"> Clientside Latency <"+(data.clientReceiveTime - data.clientSentTime)+">");	

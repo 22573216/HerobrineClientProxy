@@ -23,7 +23,7 @@ public class ForwardPacketBehaviour implements Behaviour<Packet>{
 	@Override
 	public void process(Packet packet) {
 		if (toServer) {
-			proxySession.sendPacketToServer(packet);
+			proxySession.sendPacketToVastMatcher(packet);
 		} else {
 			proxySession.sendPacketToClient(packet);	
 		}

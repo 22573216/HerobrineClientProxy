@@ -18,7 +18,7 @@ public interface IProxySessionNew {
 	public void disconnectFromServer();
 	
 	public void sendPacketToClient(Packet packet);
-	public void sendPacketToServer(Packet packet);
+	public void sendPacketToVastMatcher(Packet packet);
 	
 	public void migrate(String host, int port);
 	public void switchServer();
