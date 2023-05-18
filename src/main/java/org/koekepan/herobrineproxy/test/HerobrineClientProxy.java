@@ -11,24 +11,24 @@ public class HerobrineClientProxy {
 	private static ClientProxy proxy = null;
 
 	public static void main(String[] args) {
-		String proxyHost = "127.0.0.1";
-		int proxyPort = 25570;
-		String serverHost = "127.0.0.1";
-		int serverPort = 25565;
+		String ThisProxyHost = "127.0.0.1";
+		int ThisProxyPort = 25570;
+		String VastHost = "127.0.0.1";
+		int VastPort = 25565;
 		
 		// read command line parameters
 		try {
 			if (args.length == 2) {
-				serverHost = args[0];
-				serverPort = Integer.parseInt(args[1]);
-				proxy = new ClientProxy(proxyHost, proxyPort, serverHost, serverPort);
+				VastHost = args[0];
+				VastPort = Integer.parseInt(args[1]);
+				proxy = new ClientProxy(ThisProxyHost, ThisProxyPort, VastHost, VastPort);
 
 			} else if (args.length == 4) {
-				serverHost = args[0];
-				serverPort = Integer.parseInt(args[1]);
-				proxyHost = args[2];
-				proxyPort = Integer.parseInt(args[3]);
-				proxy = new ClientProxy(proxyHost, proxyPort, serverHost, serverPort);
+				VastHost = args[0];
+				VastPort = Integer.parseInt(args[1]);
+				ThisProxyHost = args[2];
+				ThisProxyPort = Integer.parseInt(args[3]);
+				proxy = new ClientProxy(ThisProxyHost, ThisProxyPort, VastHost, VastPort);
 			
 			} else {
 				printUsageMessage();

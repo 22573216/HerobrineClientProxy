@@ -4,15 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.koekepan.herobrineproxy.session.ClientSession;
 import org.koekepan.herobrineproxy.session.ClientProxySession;
 import org.koekepan.herobrineproxy.session.IClientSession;
 import org.koekepan.herobrineproxy.session.IProxySessionNew;
-import org.koekepan.herobrineproxy.session.ProxySessionV3;
 import org.koekepan.herobrineproxy.sps.*;
 
 import com.github.steveice10.packetlib.Server;
@@ -31,26 +27,26 @@ public class ClientProxy {
 
 	//private ScheduledExecutorService serverPoll = Executors.newSingleThreadScheduledExecutor();
 
-	private String proxyHost = null;
-	private int proxyPort = 0;
-	private String serverHost = null;
-	private int serverPort = 0;
+	private String ThisProxyHost = null;
+	private int ThisProxyPort = 0;
+	private String VastHost = null;
+	private int VastPort = 0;
 	private ISPSConnection spsConnection;
 	
 	private Server server = null;
 	private Map<Session, IProxySessionNew> sessions = new HashMap<Session, IProxySessionNew>();
 	
 
-	public ClientProxy(final String proxyHost, final int proxyPort, final String serverHost, final int serverPort) {
-		this.proxyHost = proxyHost;
-		this.proxyPort = proxyPort;
-		this.serverHost = serverHost;
-		this.serverPort = serverPort;
+	public ClientProxy(final String ThisProxyHost, final int ThisProxyPort, final String VastHost, final int VastPort) {
+		this.ThisProxyHost = ThisProxyHost;
+		this.ThisProxyPort = ThisProxyPort;
+		this.VastHost = VastHost;
+		this.VastPort = VastPort;
 		
 		// setup proxy server and add listener to create and store/discard proxy sessions as clients connect/disconnect
-		server = new Server(proxyHost, proxyPort, HerobrineProxyProtocol.class, new TcpSessionFactory());	
-		this.spsConnection = new SPSConnection(this.serverHost, 3000);
-		ConsoleIO.println("Connecting to sps server");
+		server = new Server(ThisProxyHost, ThisProxyPort, HerobrineProxyProtocol.class, new TcpSessionFactory());
+		this.spsConnection = new SPSConnection(this.VastHost, this.VastPort);
+		ConsoleIO.println("Connecting to VAST sps server");
 		this.spsConnection.connect();
 		
 		server.addListener(new ServerAdapter() {
@@ -58,9 +54,9 @@ public class ClientProxy {
 			@Override
 			public void sessionAdded(SessionAddedEvent event) {
 				Session session = event.getSession();
-				ConsoleIO.println("HerobrineProxy::sessionAdded => A SessionAdded event occured from <"+session.getHost()+":"+session.getPort()+"> to server <"+serverHost+":"+serverPort+">");
+				ConsoleIO.println("HerobrineProxy::sessionAdded => A SessionAdded event occured from <"+session.getHost()+":"+session.getPort()+"> to server <"+VastHost+":"+VastPort+">");
 				IClientSession clientSession = new ClientSession(session);
-				IProxySessionNew proxySession = new ClientProxySession(clientSession, spsConnection, serverHost, serverPort);
+				IProxySessionNew proxySession = new ClientProxySession(clientSession, spsConnection, VastHost, VastPort);
 				sessions.put(event.getSession(), proxySession);
 			}
 
@@ -90,23 +86,23 @@ public class ClientProxy {
 	}
 
 	
-	public String getProxyHost() {
-		return proxyHost;
+	public String getThisProxyHost() {
+		return ThisProxyHost;
 	}
 
 	
-	public int getProxyPort() {
-		return proxyPort;
+	public int getThisProxyPort() {
+		return ThisProxyPort;
 	}
 
 
-	public String getServerHost() {
-		return serverHost;
+	public String getVastHost() {
+		return VastHost;
 	}
 
 
-	public int getServerPort() {
-		return serverPort;
+	public int getVastPort() {
+		return VastPort;
 	}
 
 	

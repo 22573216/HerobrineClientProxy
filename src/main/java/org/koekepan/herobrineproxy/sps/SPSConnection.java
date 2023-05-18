@@ -6,6 +6,9 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.koekepan.herobrineproxy.ConsoleIO;
 import org.koekepan.herobrineproxy.HerobrineProxyProtocol;
@@ -49,7 +52,8 @@ public class SPSConnection implements ISPSConnection {
 	//private PacketProtocol protocol;
 	private Map<String, ISession> listeners = new HashMap<String, ISession>();
 	private IProxySessionConstructor sessionConstructor;
-	
+	private UUID uuid = UUID.randomUUID();
+
 	public SPSConnection(String SPSHost, int SPSPort) {
 		this.SPSHost = SPSHost;
 		this.SPSPort = SPSPort;
@@ -64,16 +68,48 @@ public class SPSConnection implements ISPSConnection {
 
 
 	private boolean initializeConnection() {
-		ConsoleIO.println("Initialize SPS connection");
+		final CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
 		String URL = "http://"+this.SPSHost+":"+this.SPSPort;
-		boolean result = false;
+		ConsoleIO.println(URL);
+		final boolean[] result = {false};
 		try {
 			this.socket = IO.socket(URL);
-			result = true;
+			final UUID thisUUID = this.uuid;
+
+			socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+				@Override
+				public void call(Object... args) {
+					socket.emit("handshake", thisUUID.toString() ,"Hello, server. This is Java Client");
+				}
+			}).on("handshake", new Emitter.Listener() {
+				@Override
+				public void call(Object... args) {
+					if (("Hello, client with UUID: " + thisUUID.toString() + ". This is Node.js Server.").equals(args[0])) {
+						System.out.println("Successfully connected to the correct server.");
+						result[0] = true;
+//						return true;
+					} else {
+						System.out.println("Failed to connect to the correct server.");
+					}
+					completableFuture.complete(true);
+				}
+			});
+
+			socket.connect();
+
 		} catch (URISyntaxException e) {
-				e.printStackTrace();
+			e.printStackTrace();
 		}
-		return result;
+		ConsoleIO.println("the result got from initializeconnection is: " + result[0]);
+
+		try {
+			result[0] = completableFuture.get();  // this will block until the CompletableFuture is complete
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			throw new RuntimeException(e);
+		}
+		return result[0];
 	}
 
 	public void initialiseListeners() {
@@ -137,11 +173,17 @@ public class SPSConnection implements ISPSConnection {
 	public void connect() {
 		if (initializeConnection()) {
 			initialiseListeners();
-			socket.connect();
+			initialiseVASTclient();
+//			socket.connect();
 		}
 	}
 
-	
+	private void initialiseVASTclient() {
+		ConsoleIO.println("Trying to spawn a VAST Client to represent the Minecraft Client on VASTnet");
+		socket.emit("spawn_VASTclient", "Minecraft Client 1", "127.0.0.1", "20000");
+	}
+
+
 	@Override
 	public void disconnect() {
 		ConsoleIO.println("SPS disconnected");
