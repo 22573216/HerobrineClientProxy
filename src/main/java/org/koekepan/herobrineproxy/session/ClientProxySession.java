@@ -56,8 +56,9 @@ public class ClientProxySession implements IProxySessionNew {
 	public void sendPacketToVastMatcher(Packet packet) {
 		//ConsoleIO.println("ProxySessionV3::sendPacketToServer => Sending packet <"+packet.getClass().getSimpleName()+"> to server <"+serverSession.getHost()+":"+serverSession.getPort()+">");		
 //		serverSession.sendPacket(packet);
-
-//		this.spsConnection.publish(packet); // Something like this
+//		SPSPacket(Packet packet, String username, int x, int y, int radius, String channel) {
+		SPSPacket spsPacket = new SPSPacket(packet, "username", 2, 3, 2, "serverbound");
+		this.spsConnection.publish(spsPacket); // Something like this
 	}
 	
 

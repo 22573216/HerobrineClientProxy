@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import org.json.JSONException;
 import org.koekepan.herobrineproxy.ConsoleIO;
 import org.koekepan.herobrineproxy.HerobrineProxyProtocol;
 //import org.koekepan.herobrineproxy.SPSServerProxy;
@@ -132,7 +133,7 @@ public class SPSConnection implements ISPSConnection {
 		
 		socket.on("publication", new Emitter.Listener() {
 			@Override
-			public void call(Object... data) {
+			public void call(Object... data) { // receive publication from vast matcher as a client
 				SPSPacket packet = receivePublication(data);
 				String username = packet.username;
 				int x = packet.x;
@@ -147,9 +148,9 @@ public class SPSConnection implements ISPSConnection {
 						IProxySessionNew proxySession = sessionConstructor.createProxySession(username);
 						String host = proxySession.getServerHost();
 						int port = proxySession.getServerPort();
-						proxySession.connect(host, port);					
+						proxySession.connect(host, port);
 					} else {
-						ConsoleIO.println("SPSConnection::publication Must disconnect ession of user <"+username+">");
+						ConsoleIO.println("SPSConnection::publication Must disconnect session of user <"+username+">");
 						IProxySessionNew proxySession = sessionConstructor.getProxySession(username);
 						if (proxySession != null) {
 							proxySession.disconnect();
@@ -157,7 +158,8 @@ public class SPSConnection implements ISPSConnection {
 							ConsoleIO.println("SPSConnection::publication => Received a packet for an unknown session <"+username+">");
 						}
 					}
-				} else if (listeners.containsKey(username)) {					
+				} else if (listeners.containsKey(username)) {
+//				if (listeners.containsKey(username)) {
 					//listeners.get(username).packetReceived(packet.packet);
 					ConsoleIO.println("SPSConnection::publication => Sending packet <"+packet.packet.getClass().getSimpleName()+"> for player <"+username+"> at <"+x+":"+y+":"+radius+">");
 					listeners.get(username).sendPacket(packet.packet);
@@ -181,6 +183,14 @@ public class SPSConnection implements ISPSConnection {
 	private void initialiseVASTclient() {
 		ConsoleIO.println("Trying to spawn a VAST Client to represent the Minecraft Client on VASTnet");
 		socket.emit("spawn_VASTclient", "Minecraft Client 1", "127.0.0.1", "20000");
+
+		// TODO: This subscribe should be more client-specific:
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		socket.emit("subscribe", 500,500,500,"login");
 	}
 
 
@@ -207,16 +217,31 @@ public class SPSConnection implements ISPSConnection {
 	
 	
 	@Override
-	public SPSPacket receivePublication(Object... data) {
-		int connectionID = (int)data[0];
-		String username = (String)data[1];
-		int x = (int)data[2];
-		int y = (int)data[3];
-		int radius = (int)data[4];
-		String publication = data[5].toString();
-		String channel = (String)data[6];
-		Packet packet = retrievePacket(publication);
-		SPSPacket spsPacket = new SPSPacket(packet, username, x, y, radius, channel);
+	public SPSPacket receivePublication(Object... data) { // received from the vast matcher/client
+		SPSPacket spsPacket = null;
+
+		try {
+			org.json.JSONObject jsonObject = (org.json.JSONObject) data[0];
+			org.json.JSONObject payloadObject = jsonObject.getJSONObject("payload");
+			ConsoleIO.println("This is what I've got: " + payloadObject.toString());
+//			{"chain":[1],"clientID":"zDJlt","payload":{"0":0,"1":"user_01","2":0,"3":0,"4":200,"5":"[117,7,117,115,101,114,95,48,49,1]","6":"login"},"recipients":[1],"channel":"login","aoi":{"center":{"x":500,"y":500},"radius":500},"matcherID":1}
+			String connectionID = payloadObject.getString("connectionID");
+			String userName = payloadObject.getString("username");
+			int x = payloadObject.getInt("x");
+			int y = payloadObject.getInt("y");
+			int radius = payloadObject.getInt("radius");
+			String publication = payloadObject.getString("actualPacket");
+			String channel = payloadObject.getString("channel");
+
+			Packet packet = retrievePacket(publication);
+
+			spsPacket = new SPSPacket(packet, userName, x, y, radius, channel);
+//				public SPSPacket(Packet packet, String username, int x, int y, int radius, String channel) {
+
+			} catch (JSONException e) {
+			e.printStackTrace();
+			// Handle the exception (e.g., log it, throw it, etc.)
+		}
 		return spsPacket;
 	}
 
@@ -229,7 +254,7 @@ public class SPSConnection implements ISPSConnection {
 	
 	
 	@Override
-	public void publish(SPSPacket packet) { // , String username, String channel) {
+	public void publish(SPSPacket packet) { // sends to vast matcher as client
 		ConsoleIO.println("Publish packet " + packet.toString());
 		
 		if ((packet.packet instanceof ClientPlayerPositionPacket)) {
@@ -252,7 +277,7 @@ public class SPSConnection implements ISPSConnection {
 		byte[] payload = this.packetToBytes(packet.packet);
 		String json = gson.toJson(payload);
 		//ConsoleIO.println("Connection <"+connectionID+"> sent packet <"+packet.packet.getClass().getSimpleName()+"> on channel <"+packet.channel+">");
-		socket.emit("publish", connectionID, packet.username, 0, 0, 0, json, packet.channel);
+		socket.emit("publish", connectionID, packet.username, 0, 0, 200, json, packet.channel); // TODO: This should not be hard coded
 	}
 
 
