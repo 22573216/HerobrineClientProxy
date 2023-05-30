@@ -98,6 +98,7 @@ public class PacketHandler implements Runnable, PacketListener {
 	
 	@Override
 	public void sendPacket(Packet packet) {
+//		ConsoleIO.println("Sent a packet via PacketHandler: " + packet.getClass());
 		this.addPacketToOutgoingQueue(packet);
 	}
 	
@@ -120,7 +121,7 @@ public class PacketHandler implements Runnable, PacketListener {
 			//	ConsoleIO.println("PacketHandler::run => Sending outgoing packet  <"+packet.getClass().getSimpleName()+">");
 				
 				packet = outgoingPackets.poll();
-				packetSession.send(packet);
+				packetSession.send(packet); //USES SPSPACKETSESSION!
 			}			
 		} catch (Exception e) {
 			ConsoleIO.println("PacketHandler::run => Exception occurred while processing packet <"+packet.getClass().getSimpleName()+">");

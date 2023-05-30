@@ -136,6 +136,7 @@ public class SPSSession implements IServerSession {
 
 	@Override
 	public void sendPacket(Packet packet) {
+		ConsoleIO.println("Sent a packet via SPSSession: " + packet.getClass().getSimpleName());
 		packetHandler.sendPacket(packet);		
 	}
 

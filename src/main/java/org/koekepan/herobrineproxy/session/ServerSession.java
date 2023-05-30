@@ -203,6 +203,7 @@ public class ServerSession implements IServerSession {
 	
 	@Override
 	public void sendPacket(Packet packet) {
+		ConsoleIO.println("Sent a packet via ServerSession: " + packet.getClass());
 		packetHandler.sendPacket(packet);		
 	}
 	

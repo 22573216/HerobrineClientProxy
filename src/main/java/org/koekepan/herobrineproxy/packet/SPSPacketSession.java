@@ -1,5 +1,6 @@
 package org.koekepan.herobrineproxy.packet;
 
+import org.koekepan.herobrineproxy.ConsoleIO;
 import org.koekepan.herobrineproxy.sps.ISPSConnection;
 import org.koekepan.herobrineproxy.sps.SPSPacket;
 
@@ -25,7 +26,9 @@ public class SPSPacketSession implements IPacketSession {
 	
 	@Override
 	public void send(Packet packet) {
-		SPSPacket spsPacket = new SPSPacket(packet, username, channel);
+		ConsoleIO.println("Sent a packet via SPSPacketSession: " + packet.getClass());
+//		SPSPacket spsPacket = new SPSPacket(packet, username, channel);
+		SPSPacket spsPacket = new SPSPacket(packet, username, "serverBound"); //TODO: Make dynamic channel
 		session.publish(spsPacket);
 	}
 	

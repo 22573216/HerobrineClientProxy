@@ -48,17 +48,20 @@ public class ClientProxySession implements IProxySessionNew {
 	
 	@Override
 	public void sendPacketToClient(Packet packet) {
-		//ConsoleIO.println("ProxySessionV3::sendPacketToClient => Sending packet <"+packet.getClass().getSimpleName()+"> to client <"+clientSession.getHost()+":"+clientSession.getPort()+">");
+		ConsoleIO.println("ClientProxySession::sendPacketToClient via Behaviors => Sending packet <"+packet.getClass().getSimpleName()+"> to client <"+clientSession.getHost()+":"+clientSession.getPort()+">");
 		clientSession.sendPacket(packet);
 	}
 	
 	@Override
-	public void sendPacketToVastMatcher(Packet packet) {
-		//ConsoleIO.println("ProxySessionV3::sendPacketToServer => Sending packet <"+packet.getClass().getSimpleName()+"> to server <"+serverSession.getHost()+":"+serverSession.getPort()+">");		
-//		serverSession.sendPacket(packet);
+	public void sendPacketToVastMatcher(Packet packet) { //TODO: This is used with packets that have behaviours, login packets use send function directly in SPSSession?
+		ConsoleIO.println("ClientProxySession::sendPacketToVastMatcherServer via Behaviors => Stopped Sending packet <"+packet.getClass().getSimpleName()+"> to server <"+serverSession.getHost()+":"+serverSession.getPort()+">");
+
+		serverSession.sendPacket(packet);
 //		SPSPacket(Packet packet, String username, int x, int y, int radius, String channel) {
-		SPSPacket spsPacket = new SPSPacket(packet, "username", 2, 3, 2, "serverbound");
-		this.spsConnection.publish(spsPacket); // Something like this
+
+//		SPSPacket spsPacket = new SPSPacket(packet, "user_01", 2, 3, 2, "serverBound");
+//		ConsoleIO.println("THE CHANNEL IS: " + spsPacket.channel);
+//		this.spsConnection.publish(spsPacket); // Something like this
 	}
 	
 
@@ -93,8 +96,8 @@ public class ClientProxySession implements IProxySessionNew {
 		serverSession.connect();
 
 	}
-	
-	
+
+
 	
 	
 	@Override
@@ -141,7 +144,7 @@ public class ClientProxySession implements IProxySessionNew {
 
 	@Override
 	public void migrate(String host, int port) {
-		ConsoleIO.println("ProxySessionV3::migrate => Migrating player <"+getUsername()+"> to new server <"+host+":"+port+">");
+		ConsoleIO.println("ClientProxySession::migrate => Migrating player <"+getUsername()+"> to new server <"+host+":"+port+">");
 		newServerSession = new ServerSession(getUsername(), host, port);
 		this.newServerPacketBehaviours = new ServerSessionPacketBehaviours(this, newServerSession);
 		this.newServerPacketBehaviours.registerMigrationBehaviour();
