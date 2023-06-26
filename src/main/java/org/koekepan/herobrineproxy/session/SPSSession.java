@@ -58,7 +58,7 @@ public class SPSSession implements IServerSession {
 	private void initialiseSession() {		
 		ConsoleIO.println("Initialize SPSSession lmao");
 		this.packetSession = new SPSPacketSession(spsClient);
-		this.packetSession.setChannel("login");
+		this.packetSession.setChannel("clientBound");
 		this.packetHandler = new PacketHandler(new DefaultPacketBehaviours(), packetSession);
 		packetFuture = packetExecutor.scheduleAtFixedRate(this.packetHandler, 0, 1, TimeUnit.MILLISECONDS);
 	}
@@ -66,7 +66,7 @@ public class SPSSession implements IServerSession {
 
 	@Override
 	public void setUsername(String username) {
-		ConsoleIO.println("SPSSession::setUsername => Settting session username to <"+username+">");
+		ConsoleIO.println("SPSSession::setUsername => Setting session username to <"+username+">");
 		this.username = username;
 		this.packetSession.setUsername(username);
 		this.spsClient.addListener(this);

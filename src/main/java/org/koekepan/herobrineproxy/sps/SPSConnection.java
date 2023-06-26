@@ -137,39 +137,20 @@ public class SPSConnection implements ISPSConnection {
 			@Override
 			public void call(Object... data) { // receive publication from vast matcher as a client
 				tempcounter_deleteme += 1;
-				ConsoleIO.println("Received a publication from vastnet and attempting to send to Minecraft player!");
+//				ConsoleIO.println("Received a publication from vastnet and attempting to send to Minecraft player!");
 				SPSPacket packet = receivePublication(data);
-//				String username = packet.username;
-				String username = "user_01"; // TODO: Fix username
+				String username = packet.username;
 				int x = packet.x;
 				int y = packet.y;
 				int radius = packet.radius;
 
 				ConsoleIO.println("Amount of publications received: " + tempcounter_deleteme + ": " + packet.packet.getClass().getSimpleName());
 
-				if (packet.packet instanceof EstablishConnectionPacket) {
-					EstablishConnectionPacket loginPacket = (EstablishConnectionPacket)packet.packet;
-					username = loginPacket.getUsername();
-					if (loginPacket.establishConnection()) {
-						ConsoleIO.println("SPSConnection::publication Must establish new connection for session <"+username+">");
-						IProxySessionNew proxySession = sessionConstructor.createProxySession(username);
-						String host = proxySession.getServerHost();
-						int port = proxySession.getServerPort();
-						proxySession.connect(host, port);
-					} else {
-						ConsoleIO.println("SPSConnection::publication Must disconnect session of user <"+username+">");
-						IProxySessionNew proxySession = sessionConstructor.getProxySession(username);
-						if (proxySession != null) {
-							proxySession.disconnect();
-						} else {
-							ConsoleIO.println("SPSConnection::publication => Received a packet for an unknown session <"+username+">");
-						}
-					}
-				} else if (listeners.containsKey(username)) {
-//				if (listeners.containsKey(username)) {
-					//listeners.get(username).packetReceived(packet.packet);
+				if (listeners.containsKey(username)) {
+//					listeners.get(username).packetReceived(packet.packet);
+//					ConsoleIO.println("It would also seem that the listener used is a: " + listeners.get(username).getClass().getName());
 //					ConsoleIO.println("SPSConnection::publication => Sending packet <"+packet.packet.getClass().getSimpleName()+"> for player <"+username+"> at <"+x+":"+y+":"+radius+">");
-					listeners.get(username).sendPacket(packet.packet);
+					listeners.get(username).sendPacket(packet.packet); // TODO: Maybe check if this should rather be packetReceived and handled by Behaviours
 				} else {
 					ConsoleIO.println("SPSConnection::publication => Received a packet for an unknown session <"+username+">");
 				}
@@ -197,7 +178,7 @@ public class SPSConnection implements ISPSConnection {
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-		socket.emit("subscribe", 500,500,100,"clientBound");
+		socket.emit("subscribe", 100,100,100,"clientBound");
 	}
 
 
@@ -265,8 +246,8 @@ public class SPSConnection implements ISPSConnection {
 	int temp_pubcounter = 0;
 //	int temp_movecounter = 0;
 
-	int current_x = 0;
-	int current_y = 0;
+	int current_x = 100;
+	int current_y = 100;
 
 	@Override
 	public void publish(SPSPacket packet) { // sends to vast matcher as client
@@ -282,9 +263,9 @@ public class SPSConnection implements ISPSConnection {
 			if (current_x != x || current_y != z) { // TODO: This is wack, fix:
 				current_x = (int) x;
 				current_y = (int) z;
-				socket.emit("move", x, z); // TODO: Check if this subscribe is necessary, maybe move
-				socket.emit("clearSubscriptions");
-				subscribe(current_x, current_y, 50);
+				socket.emit("move", x, z); // TODO: Check if this is not too much move packets, alternatives?
+				socket.emit("clearsubscriptions");
+				subscribe(current_x, current_y, 10); // TODO: AOI
 			}
 		} else if ((packet.packet instanceof ClientPlayerPositionRotationPacket)) {
 			ConsoleIO.println("POSITION PACKET");
@@ -295,9 +276,9 @@ public class SPSConnection implements ISPSConnection {
 			if (current_x != x || current_y != z) { // TODO: This is wack, fix:
 				current_x = (int) x;
 				current_y = (int) z;
-				socket.emit("move", x, z); // TODO: Check if this subscribe is necessary, maybe move
-				socket.emit("clearSubscriptions");
-				subscribe(current_x, current_y, 50);
+				socket.emit("move", x, z); // TODO: Check if this is not too much move packets, alternatives?
+				socket.emit("clearsubscriptions");
+				subscribe(current_x, current_y, 10); // TODO: AOI
 			}
 		}
 		//convert to JSON
@@ -308,16 +289,14 @@ public class SPSConnection implements ISPSConnection {
 
 		temp_pubcounter += 1;
 		ConsoleIO.println("Amount of packets sent: " + temp_pubcounter + ": " + packet.packet.getClass().getSimpleName());
-		socket.emit("publish", connectionID, packet.username, current_x, current_y, 100, json, packet.channel); // TODO: This should not be hard coded, this is also wack
+		socket.emit("publish", connectionID, packet.username, current_x, current_y, 1, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
 	}
 
 
 	@Override
 	public void subscribe(int x, int z, int aoi) { // TODO: Fix subscription area
-		socket.emit("subscribe", x, z, 50, "clientBound");
-		// TODO Auto-generated method stub
-
-	}
+		socket.emit("subscribe", x, z, 10, "clientBound");
+	} // TODO: AOI
 
 	@Override
 	public void unsubscribed(String channel) {

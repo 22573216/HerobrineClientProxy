@@ -25,7 +25,7 @@ public class ForwardPacketBehaviour implements Behaviour<Packet>{
 		if (toServer) {
 			proxySession.sendPacketToVastMatcher(packet);
 		} else {
-			proxySession.sendPacketToClient(packet);	
+			proxySession.sendPacketToClient(packet);	//Client Proxy Session
 		}
 	}
 }

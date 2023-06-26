@@ -30,6 +30,9 @@ public class ClientProxySession implements IProxySessionNew {
 		this.clientPacketBehaviours = new ClientSessionPacketBehaviours(this);
 		this.clientPacketBehaviours.registerDefaultBehaviours(clientSession);
 		this.clientPacketBehaviours.registerForwardingBehaviour();
+//		this.serverPacketBehaviours = new ClientSessionPacketBehaviours(this);
+//		this.clientPacketBehaviours.registerDefaultBehaviours(clientSession);
+//		this.clientPacketBehaviours.registerForwardingBehaviour();
 		this.clientSession.setPacketBehaviours(clientPacketBehaviours);
 		
 //		this.serverSession = new ServerSession(serverHost, serverPort);
@@ -87,13 +90,15 @@ public class ClientProxySession implements IProxySessionNew {
 //		this.serverSession.setPacketBehaviours(serverPacketBehaviours);	
 //		serverSession.connect();
 		ConsoleIO.println("ClientToSPSProxy::connect => Player <"+getUsername()+"> is connecting to server <"+host+":"+port+">");
-		this.spsConnection.addListener(this.clientSession);
 		this.clientPacketBehaviours.registerForwardingBehaviour();
-
 		this.serverPacketBehaviours = new ServerSessionPacketBehaviours(this, serverSession);
 		this.serverPacketBehaviours.registerForwardingBehaviour();
-		this.serverSession.setPacketBehaviours(serverPacketBehaviours);	
+		this.serverSession.setPacketBehaviours(serverPacketBehaviours);
+//		this.clientSession.setPacketBehaviours(serverPacketBehaviours);
 		serverSession.connect();
+
+		this.spsConnection.addListener(this.clientSession);
+
 
 	}
 
