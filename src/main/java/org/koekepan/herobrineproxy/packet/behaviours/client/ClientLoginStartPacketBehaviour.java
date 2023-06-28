@@ -27,6 +27,7 @@ public class ClientLoginStartPacketBehaviour implements Behaviour<Packet>{
 		String serverHost = proxySession.getServerHost();
 		int serverPort = proxySession.getServerPort();
 		proxySession.setUsername(username);
+//		ConsoleIO.println("ClientLoginStartPacketBehaviour");
 		ConsoleIO.println("Player \"" + username + "\" is connecting to <" + serverHost + ":" + serverPort + ">");
 		proxySession.connect(serverHost, serverPort);
 	}

@@ -48,7 +48,9 @@ public class ClientProxy {
 		this.spsConnection = new SPSConnection(this.VastHost, this.VastPort);
 		ConsoleIO.println("Connecting to VAST sps server");
 		this.spsConnection.connect();
-		
+
+//		ConsoleIO.println("Starting to add new listener");
+
 		server.addListener(new ServerAdapter() {
 			
 			@Override

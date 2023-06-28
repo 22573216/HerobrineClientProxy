@@ -7,6 +7,7 @@ import com.github.steveice10.packetlib.packet.Packet;
 
 import org.koekepan.herobrineproxy.ConsoleIO;
 //import org.apache.logging.log4j.LogManager;
+import org.koekepan.herobrineproxy.behaviour.Behaviour;
 import org.koekepan.herobrineproxy.behaviour.BehaviourHandler;
 
 public class PacketHandler implements Runnable, PacketListener {
@@ -58,9 +59,11 @@ public class PacketHandler implements Runnable, PacketListener {
 	
 	private void addPacketToIncomingQueue(Packet packet) {
 		try {
-		//	ConsoleIO.println("PacketHandler::addPacketToIncomingQueue => Attempting to add packet <"+packet.getClass().getSimpleName()+"> that has registered behaviour <"+behaviours.hasBehaviour(packet.getClass())+"> to queue");
+//			ConsoleIO.println(behaviours.toString());
+			ConsoleIO.println("PacketHandler::addPacketToIncomingQueue => Attempting to add packet <"+packet.getClass().getSimpleName()+"> that has registered behaviour <"+behaviours.hasBehaviour(packet.getClass())+"> to queue");
+//			ConsoleIO.println(behaviours);
 			//behaviours.printBehaviours();
-			if (behaviours.hasBehaviour(packet.getClass())) {
+			if ( behaviours.hasBehaviour(packet.getClass()) ) {
 				//ConsoleIO.println("PacketHandler::addPacketToIncomingQueue => Has registered behaviour for packet <"+packet.getClass().getSimpleName()+">");
 				incomingPackets.add(packet);
 			}
@@ -110,7 +113,7 @@ public class PacketHandler implements Runnable, PacketListener {
 		try {
 			packet = incomingPackets.poll();
 			if (packet != null) {
-				//ConsoleIO.println("PacketHandler::run => Processing packet <"+packet.getClass().getSimpleName()+">. Packets remaining in queue: "+incomingPackets.size());
+				ConsoleIO.println("PacketHandler::run => Processing packet <"+packet.getClass().getSimpleName()+">. Packets remaining in queue: "+incomingPackets.size());
 				behaviours.process(packet);
 			}
 			
@@ -119,6 +122,8 @@ public class PacketHandler implements Runnable, PacketListener {
 			//ConsoleIO.println("PacketHandler::run => <"+outgoingPackets.size()+"> packets in outgoing queue");
 			if (packet != null && packetSession != null) {
 			//	ConsoleIO.println("PacketHandler::run => Sending outgoing packet  <"+packet.getClass().getSimpleName()+">");
+
+//				ConsoleIO.println("HEREHERE!");
 				
 				packet = outgoingPackets.poll();
 				packetSession.send(packet); //USES SPSPACKETSESSION!
