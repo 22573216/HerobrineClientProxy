@@ -12,7 +12,7 @@ import com.github.steveice10.packetlib.packet.Packet;
 public class ClientProxySession implements IProxySessionNew {
 
 	IClientSession clientSession;
-	IServerSession serverSession;
+	IServerSession spsSession;
 	IServerSession spsServerSession;
 	IServerSession newServerSession;
 	ISPSConnection spsConnection;
@@ -25,16 +25,21 @@ public class ClientProxySession implements IProxySessionNew {
 	public ClientProxySession(IClientSession clientSession, ISPSConnection spsConnection, String serverHost, int serverPort) {
 		this.clientSession = clientSession;
 		this.spsConnection = spsConnection;
-		this.serverSession = new SPSSession(spsConnection);
+		this.spsSession = new SPSSession(spsConnection);
 		
 		this.clientPacketBehaviours = new ClientSessionPacketBehaviours(this);
 		this.clientPacketBehaviours.registerDefaultBehaviours(clientSession);
-		this.clientPacketBehaviours.registerForwardingBehaviour();
-//		this.serverPacketBehaviours = new ClientSessionPacketBehaviours(this);
-//		this.clientPacketBehaviours.registerDefaultBehaviours(clientSession);
-//		this.clientPacketBehaviours.registerForwardingBehaviour();
+		this.clientPacketBehaviours.registerForwardingBehaviour(spsSession);
+
+//		this.serverPacketBehaviours = new ServerSessionPacketBehaviours(this, spsSession);
+//		this.serverPacketBehaviours.registerDefaultBehaviours(clientSession);
+//		this.serverPacketBehaviours.registerForwardingBehaviour();
+
 		this.clientSession.setPacketBehaviours(clientPacketBehaviours);
-		
+//		this.spsSession.setPacketBehaviours(clientPacketBehaviours);
+
+//		ConsoleIO.println("behaviours regi");
+
 //		this.serverSession = new ServerSession(serverHost, serverPort);
 	}
 		
@@ -46,7 +51,7 @@ public class ClientProxySession implements IProxySessionNew {
 	@Override
 	public void setUsername(String username) {
 		clientSession.setUsername(username);
-		serverSession.setUsername(username);
+		spsSession.setUsername(username);
 	}
 	
 	@Override
@@ -57,9 +62,9 @@ public class ClientProxySession implements IProxySessionNew {
 	
 	@Override
 	public void sendPacketToVastMatcher(Packet packet) { //TODO: This is used with packets that have behaviours, login packets use send function directly in SPSSession?
-		ConsoleIO.println("ClientProxySession::sendPacketToVastMatcherServer via Behaviors => Stopped Sending packet <"+packet.getClass().getSimpleName()+"> to server <"+serverSession.getHost()+":"+serverSession.getPort()+">");
+		ConsoleIO.println("ClientProxySession::sendPacketToVastMatcherServer via Behaviors => Stopped Sending packet <"+packet.getClass().getSimpleName()+"> to server <"+ spsSession.getHost()+":"+ spsSession.getPort()+">");
 
-		serverSession.sendPacket(packet);
+		spsSession.sendPacket(packet);
 //		SPSPacket(Packet packet, String username, int x, int y, int radius, String channel) {
 
 //		SPSPacket spsPacket = new SPSPacket(packet, "user_01", 2, 3, 2, "serverBound");
@@ -90,12 +95,12 @@ public class ClientProxySession implements IProxySessionNew {
 //		this.serverSession.setPacketBehaviours(serverPacketBehaviours);	
 //		serverSession.connect();
 		ConsoleIO.println("ClientToSPSProxy::connect => Player <"+getUsername()+"> is connecting to server <"+host+":"+port+">");
-		this.clientPacketBehaviours.registerForwardingBehaviour();
-		this.serverPacketBehaviours = new ServerSessionPacketBehaviours(this, serverSession);
-		this.serverPacketBehaviours.registerForwardingBehaviour();
-		this.serverSession.setPacketBehaviours(serverPacketBehaviours);
+//		this.clientPacketBehaviours.registerForwardingBehaviour();
+//		this.serverPacketBehaviours = new ServerSessionPacketBehaviours(this, spsSession);
+//		this.serverPacketBehaviours.registerForwardingBehaviour();
+//		this.spsSession.setPacketBehaviours(serverPacketBehaviours);
 //		this.clientSession.setPacketBehaviours(serverPacketBehaviours);
-		serverSession.connect();
+		spsSession.connect();
 
 		this.spsConnection.addListener(this.clientSession);
 
@@ -107,7 +112,7 @@ public class ClientProxySession implements IProxySessionNew {
 	
 	@Override
 	public boolean isConnected() {
-		return serverSession.isConnected();
+		return spsSession.isConnected();
 	}
 	
 	
@@ -121,7 +126,7 @@ public class ClientProxySession implements IProxySessionNew {
 	@Override
 	public void disconnectFromServer() {
 		if (isConnected() ) {
-			serverSession.disconnect();
+			spsSession.disconnect();
 		}
 	}
 	
@@ -137,13 +142,13 @@ public class ClientProxySession implements IProxySessionNew {
 
 	@Override
 	public String getServerHost() {
-		return serverSession.getHost();
+		return spsSession.getHost();
 	}
 
 
 	@Override
 	public int getServerPort() {
-		return serverSession.getPort();
+		return spsSession.getPort();
 	}
 
 
@@ -160,7 +165,7 @@ public class ClientProxySession implements IProxySessionNew {
 	
 	@Override
 	public void switchServer() {
-		serverSession = newServerSession;
+		spsSession = newServerSession;
 		this.serverPacketBehaviours.clearBehaviours();
 		this.serverPacketBehaviours = this.newServerPacketBehaviours;
 		this.newServerPacketBehaviours = null;
@@ -169,12 +174,12 @@ public class ClientProxySession implements IProxySessionNew {
 	
 	@Override 
 	public void setPacketForwardingBehaviour() {
-		this.serverPacketBehaviours.registerForwardingBehaviour();
+//		this.serverPacketBehaviours.registerForwardingBehaviour(); // Disabled: see ClientSessionPacketBehaviours.java
 	}
 	
 	
 	@Override 
 	public void registerForPluginChannels() {
-		this.serverSession.registerClientForChannels();
+		this.spsSession.registerClientForChannels();
 	}
 }

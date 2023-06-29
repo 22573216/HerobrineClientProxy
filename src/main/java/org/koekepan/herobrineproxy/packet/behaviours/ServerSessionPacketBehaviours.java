@@ -43,6 +43,8 @@ public class ServerSessionPacketBehaviours extends BehaviourHandler<Packet> {
 	
 	
 	public void registerForwardingBehaviour() {
+		//////////////////// NOT USED!!! - See ClientSessionPacketBehaviours.java! ////////////////////
+
 		clearBehaviours();
 		clientForwarder = new ForwardPacketBehaviour(proxySession, false);
 		registerBehaviour(LoginDisconnectPacket.class, clientForwarder);

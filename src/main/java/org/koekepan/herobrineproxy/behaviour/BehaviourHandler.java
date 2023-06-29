@@ -44,4 +44,12 @@ public class BehaviourHandler<T> {
 		}	
 	}
 
+	public void printBehaviours() {
+		for (Map.Entry<Class<? extends T>, Behaviour<T>> entry : behaviours.entrySet()) {
+			System.out.println("Behaviour Type: " + entry.getKey().getName());
+			System.out.println("Behaviour Instance: " + entry.getValue().toString());
+		}
+	}
+
+
 }

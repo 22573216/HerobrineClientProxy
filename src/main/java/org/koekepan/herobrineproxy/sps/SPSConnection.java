@@ -150,7 +150,7 @@ public class SPSConnection implements ISPSConnection {
 //					listeners.get(username).packetReceived(packet.packet);
 //					ConsoleIO.println("It would also seem that the listener used is a: " + listeners.get(username).getClass().getName());
 //					ConsoleIO.println("SPSConnection::publication => Sending packet <"+packet.packet.getClass().getSimpleName()+"> for player <"+username+"> at <"+x+":"+y+":"+radius+">");
-					listeners.get(username).sendPacket(packet.packet); // TODO: Maybe check if this should rather be packetReceived and handled by Behaviours
+					listeners.get(username).packetReceived(packet.packet);
 				} else {
 					ConsoleIO.println("SPSConnection::publication => Received a packet for an unknown session <"+username+">");
 				}
