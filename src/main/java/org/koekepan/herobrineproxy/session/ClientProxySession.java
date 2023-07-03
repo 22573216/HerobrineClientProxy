@@ -7,6 +7,9 @@ import org.koekepan.herobrineproxy.sps.*;
 
 import com.github.steveice10.packetlib.packet.Packet;
 
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Predicate;
 
 
 public class ClientProxySession implements IProxySessionNew {
@@ -20,8 +23,16 @@ public class ClientProxySession implements IProxySessionNew {
 	ClientSessionPacketBehaviours clientPacketBehaviours;
 	ServerSessionPacketBehaviours serverPacketBehaviours;
 	ServerSessionPacketBehaviours newServerPacketBehaviours;
-	
-	
+
+	// initialize these lists somewhere in your code
+	private List<ChunkPosition> positions = new ArrayList<>();
+	private List<ChunkPosition> isolatedPositions = new ArrayList<>();
+
+
+	public IClientSession getClientSession() {
+		return clientSession;
+	}
+
 	public ClientProxySession(IClientSession clientSession, ISPSConnection spsConnection, String serverHost, int serverPort) {
 		this.clientSession = clientSession;
 		this.spsConnection = spsConnection;
@@ -181,5 +192,134 @@ public class ClientProxySession implements IProxySessionNew {
 	@Override 
 	public void registerForPluginChannels() {
 		this.spsSession.registerClientForChannels();
+	}
+
+	public void receiveChunkPosition(ChunkPosition position) {
+		synchronized(positions) {
+			positions.add(position);
+		}
+//		updateIsolatedPositions();
+	}
+
+	public void updateIsolatedPositions() {
+		synchronized(positions) {
+			if (positions.toArray().length >= 441) { //TODO: This should be the setting the server admin set: https://gaming.stackexchange.com/questions/260324/what-exactly-is-affected-by-a-higher-view-distance-on-the-server-side
+				isolatedPositions.clear();
+
+
+				ChunkProcessor test = new ChunkProcessor();
+
+				isolatedPositions = test.getPolygonCorners(positions);
+
+//			if (isolatedPositions.toArray().length == 4) { //TODO will be square see above
+				SPSConnection _spsConnection = (SPSConnection) spsConnection;
+				_spsConnection.subscribePolygon(new ArrayList<>(isolatedPositions));
+//			}
+
+
+				ConsoleIO.println("length of isolated positions: " + isolatedPositions.toArray().length);
+
+			}
+		}
+	}
+
+	private boolean isAdjacent(ChunkPosition a, ChunkPosition b) {
+		return Math.abs(a.getX() - b.getX()) <= 3 && Math.abs(a.getZ() - b.getZ()) <= 3;
+	}
+
+
+	List<ChunkPosition> recentPositions = new ArrayList<>();
+
+	public void removeChunkPosition(int x, int z) {
+		// Add the current position to the recentPositions list
+//		recentPositions.add(new ChunkPosition(x, z));
+
+		// If the list exceeds 10 items, remove the oldest one
+//		if(recentPositions.size() > 10) {
+//			recentPositions.remove(0);
+//		}
+//		int tempcounter = 0;
+
+		Boolean removed = false;
+		synchronized(positions) {
+			Iterator<ChunkPosition> iterator = positions.iterator();
+			while (!removed) {
+//				tempcounter += 1;
+				while (iterator.hasNext()) {
+					ChunkPosition position = iterator.next();
+					// Remove the position if it matches the given x and z
+					if (position.getX() == x && position.getZ() == z) {
+						iterator.remove();
+						removed = true;
+						continue;
+					}
+
+//					if (tempcounter >= 10) {
+//						removed = true;
+//						ConsoleIO.println("reached 10, concerned");
+//					}
+					// Also remove the position if it is in the recentPositions list
+//			for (ChunkPosition recentPosition : recentPositions) {
+//				if (position.getX() == recentPosition.getX() && position.getZ() == recentPosition.getZ()) {
+//					iterator.remove();
+//					break;
+//				}
+//			}
+				}
+			}
+			ConsoleIO.println("length of positions: " + positions.toArray().length);
+
+//			updateIsolatedPositions();
+		}
+
+
+//		if (tempcounter % 5 == 0) {
+
+//		}
+	}
+
+}
+
+class ChunkProcessor {
+	public List<ChunkPosition> getPolygonCorners(List<ChunkPosition> positions) {
+		Set<ChunkPosition> corners = new HashSet<>();
+
+		// Helper set for faster lookup
+		Set<ChunkPosition> positionSet = new HashSet<>(positions);
+
+		for (ChunkPosition chunk : positions) {
+			// Check each side of the chunk for a neighboring chunk
+			boolean hasLeft = positionSet.contains(new ChunkPosition(chunk.getX() - 16, chunk.getZ()));
+			boolean hasRight = positionSet.contains(new ChunkPosition(chunk.getX() + 16, chunk.getZ()));
+			boolean hasTop = positionSet.contains(new ChunkPosition(chunk.getX(), chunk.getZ() - 16));
+			boolean hasBottom = positionSet.contains(new ChunkPosition(chunk.getX(), chunk.getZ() + 16));
+
+			// If there's no chunk on the left, add the left corners
+			if (!hasLeft) {
+				corners.add(new ChunkPosition(chunk.getX(), chunk.getZ()));
+				corners.add(new ChunkPosition(chunk.getX(), chunk.getZ() + 15));
+			}
+
+			// If there's no chunk on the right, add the right corners
+			if (!hasRight) {
+				corners.add(new ChunkPosition(chunk.getX() + 15, chunk.getZ()));
+				corners.add(new ChunkPosition(chunk.getX() + 15, chunk.getZ() + 15));
+			}
+
+			// If there's no chunk on the top, add the top corners
+			if (!hasTop) {
+				corners.add(new ChunkPosition(chunk.getX(), chunk.getZ()));
+				corners.add(new ChunkPosition(chunk.getX() + 15, chunk.getZ()));
+			}
+
+			// If there's no chunk on the bottom, add the bottom corners
+			if (!hasBottom) {
+				corners.add(new ChunkPosition(chunk.getX(), chunk.getZ() + 15));
+				corners.add(new ChunkPosition(chunk.getX() + 15, chunk.getZ() + 15));
+			}
+		}
+
+		// Return the list of unique corners
+		return new ArrayList<>(corners);
 	}
 }

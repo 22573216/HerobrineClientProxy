@@ -3,12 +3,10 @@ package org.koekepan.herobrineproxy.sps;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import org.json.JSONException;
 import org.koekepan.herobrineproxy.ConsoleIO;
@@ -16,6 +14,7 @@ import org.koekepan.herobrineproxy.HerobrineProxyProtocol;
 //import org.koekepan.herobrineproxy.SPSServerProxy;
 import org.koekepan.herobrineproxy.packet.EstablishConnectionPacket;
 import org.koekepan.herobrineproxy.packet.PacketListener;
+import org.koekepan.herobrineproxy.session.ChunkPosition;
 import org.koekepan.herobrineproxy.session.IProxySessionConstructor;
 import org.koekepan.herobrineproxy.session.IProxySessionNew;
 import org.koekepan.herobrineproxy.session.ISession;
@@ -264,8 +263,8 @@ public class SPSConnection implements ISPSConnection {
 				current_x = (int) x;
 				current_y = (int) z;
 				socket.emit("move", x, z); // TODO: Check if this is not too much move packets, alternatives?
-				socket.emit("clearsubscriptions");
-				subscribe(current_x, current_y, 10); // TODO: AOI
+//				socket.emit("clearsubscriptions", "clientBound");
+//				subscribe(current_x, current_y, 10); // TODO: AOI
 			}
 		} else if ((packet.packet instanceof ClientPlayerPositionRotationPacket)) {
 			ConsoleIO.println("POSITION PACKET");
@@ -277,8 +276,8 @@ public class SPSConnection implements ISPSConnection {
 				current_x = (int) x;
 				current_y = (int) z;
 				socket.emit("move", x, z); // TODO: Check if this is not too much move packets, alternatives?
-				socket.emit("clearsubscriptions");
-				subscribe(current_x, current_y, 10); // TODO: AOI
+//				socket.emit("clearsubscriptions", "clientBound");
+//				subscribe(current_x, current_y, 10); // TODO: AOI
 			}
 		}
 		//convert to JSON
@@ -289,7 +288,7 @@ public class SPSConnection implements ISPSConnection {
 
 		temp_pubcounter += 1;
 		ConsoleIO.println("Amount of packets sent: " + temp_pubcounter + ": " + packet.packet.getClass().getSimpleName());
-		socket.emit("publish", connectionID, packet.username, current_x, current_y, 1, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
+		socket.emit("publish", connectionID, packet.username, current_x, current_y, 0, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
 	}
 
 
@@ -297,6 +296,20 @@ public class SPSConnection implements ISPSConnection {
 	public void subscribe(int x, int z, int aoi) { // TODO: Fix subscription area
 		socket.emit("subscribe", x, z, 10, "clientBound");
 	} // TODO: AOI
+
+	public void subscribePolygon(List<ChunkPosition> positions){
+		List<float[]> posList = new ArrayList<float[]>();
+		for (ChunkPosition position : positions) {
+			posList.add(new float[]{position.getX(), position.getZ()});
+		}
+
+		String jsonPositions = new Gson().toJson(posList);
+
+		ConsoleIO.println("Length of jsonpositions: " + jsonPositions.toString());
+
+		socket.emit("clearsubscriptions", "clientBound");
+		socket.emit("subscribe_polygon", jsonPositions, "clientBound");
+	}
 
 	@Override
 	public void unsubscribed(String channel) {

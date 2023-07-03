@@ -114,7 +114,15 @@ public class PacketHandler implements Runnable, PacketListener {
 			packet = incomingPackets.poll();
 			if (packet != null) {
 				ConsoleIO.println("PacketHandler::run => Processing packet <"+packet.getClass().getSimpleName()+">. Packets remaining in queue: "+incomingPackets.size());
-				behaviours.process(packet);
+
+				final Packet finalPacket = packet;
+				new Thread(new Runnable() { // TODO: Check if this is the correct way of doing things;
+					@Override
+					public void run() {
+						behaviours.process(finalPacket);;
+					}
+				}).start();
+
 			}
 			
 			

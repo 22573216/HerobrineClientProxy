@@ -20,8 +20,10 @@ import org.koekepan.herobrineproxy.behaviour.BehaviourHandler;
 import org.koekepan.herobrineproxy.packet.behaviours.client.ClientHandshakePacketBehaviour;
 import org.koekepan.herobrineproxy.packet.behaviours.client.ClientLoginStartPacketBehaviour;
 import org.koekepan.herobrineproxy.packet.behaviours.login.ServerLoginSuccessPacketBehaviour;
+import org.koekepan.herobrineproxy.packet.behaviours.server.ServerChunkDataPacketBehaviour;
 import org.koekepan.herobrineproxy.packet.behaviours.server.ServerJoinGamePacketBehaviour;
 import org.koekepan.herobrineproxy.packet.behaviours.server.ServerPluginMessagePacketBehaviour;
+import org.koekepan.herobrineproxy.packet.behaviours.server.ServerUnloadChunkPacketBehaviour;
 import org.koekepan.herobrineproxy.session.IClientSession;
 import org.koekepan.herobrineproxy.session.IProxySessionNew;
 
@@ -161,10 +163,17 @@ public class ClientSessionPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(ServerDisconnectPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityStatusPacket.class, clientForwarder);
 		registerBehaviour(ServerExplosionPacket.class, clientForwarder);
-		registerBehaviour(ServerUnloadChunkPacket.class, clientForwarder);
+
+		registerBehaviour(ServerUnloadChunkPacket.class, new ServerUnloadChunkPacketBehaviour(proxySession));
+//		registerBehaviour(ServerUnloadChunkPacket.class, clientForwarder);
+
 		registerBehaviour(ServerNotifyClientPacket.class, clientForwarder);
 		registerBehaviour(ServerKeepAlivePacket.class, clientForwarder);
-		registerBehaviour(ServerChunkDataPacket.class, clientForwarder);
+
+
+		registerBehaviour(ServerChunkDataPacket.class, new ServerChunkDataPacketBehaviour(proxySession));
+//		registerBehaviour(ServerChunkDataPacket.class, clientForwarder);
+
 		registerBehaviour(ServerPlayEffectPacket.class, clientForwarder);
 		registerBehaviour(ServerSpawnParticlePacket.class, clientForwarder);
 		registerBehaviour(ServerJoinGamePacket.class, new ServerJoinGamePacketBehaviour(proxySession, serverSession));
