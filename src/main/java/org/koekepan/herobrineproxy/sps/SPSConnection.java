@@ -143,9 +143,17 @@ public class SPSConnection implements ISPSConnection {
 				int y = packet.y;
 				int radius = packet.radius;
 
-				ConsoleIO.println("Amount of publications received: " + tempcounter_deleteme + ": " + packet.packet.getClass().getSimpleName());
+				ConsoleIO.println("Amount of publications received: " + tempcounter_deleteme + ": " + packet.username + ": " + packet.packet.getClass().getSimpleName());
 
-				if (listeners.containsKey(username)) {
+
+				if (Objects.equals(username, "Herobrine") && !Objects.equals(packet.packet.getClass().getSimpleName(),"ServerKeepAlivePacket")) {
+					ConsoleIO.println("SPSed Packet received");
+					if (!listeners.isEmpty()) {
+						listeners.values().iterator().next().packetReceived(packet.packet);
+					} else {
+						ConsoleIO.println("No Listener connected to receive packet!");
+					}
+				} else if (listeners.containsKey(username)) {
 //					listeners.get(username).packetReceived(packet.packet);
 //					ConsoleIO.println("It would also seem that the listener used is a: " + listeners.get(username).getClass().getName());
 //					ConsoleIO.println("SPSConnection::publication => Sending packet <"+packet.packet.getClass().getSimpleName()+"> for player <"+username+"> at <"+x+":"+y+":"+radius+">");
@@ -177,7 +185,7 @@ public class SPSConnection implements ISPSConnection {
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-		socket.emit("subscribe", 100,100,100,"clientBound");
+		this.subscribe(100, 100, 100);
 	}
 
 
@@ -293,9 +301,22 @@ public class SPSConnection implements ISPSConnection {
 
 
 	@Override
-	public void subscribe(int x, int z, int aoi) { // TODO: Fix subscription area
-		socket.emit("subscribe", x, z, 10, "clientBound");
+	public void subscribe(int x, int z, int aoi) {
+		subscribe(x, z, aoi, null);
 	} // TODO: AOI
+
+
+	public void subscribe(int x, int z, int aoi, String channel) {
+		if (channel == null) {
+			socket.emit("subscribe", x, z, aoi, "clientBound");
+			if (!listeners.isEmpty()) {
+				socket.emit("subscribe", x, z, aoi, listeners.values().iterator().next().getUsername());
+			}
+		} else {
+			socket.emit("subscribe", x, z, aoi, channel);
+		}
+	} // TODO: AOI
+
 
 	public void subscribePolygon(List<ChunkPosition> positions){
 		List<float[]> posList = new ArrayList<float[]>();
@@ -309,11 +330,18 @@ public class SPSConnection implements ISPSConnection {
 
 		socket.emit("clearsubscriptions", "clientBound");
 		socket.emit("subscribe_polygon", jsonPositions, "clientBound");
+
+		if (!listeners.isEmpty()) {
+			String username = listeners.values().iterator().next().getUsername();
+			socket.emit("clearsubscriptions", username);
+			socket.emit("subscribe_polygon", jsonPositions, username);
+		}
+
 	}
 
 	@Override
 	public void unsubscribed(String channel) {
-		// TODO Auto-generated method stub
+		socket.emit("clearsubscriptions", channel);
 	}
 
 		
