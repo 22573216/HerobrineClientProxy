@@ -38,7 +38,7 @@ public class ClientProxySession implements IProxySessionNew {
 		this.spsConnection = spsConnection;
 		this.spsSession = new SPSSession(spsConnection);
 		
-		this.clientPacketBehaviours = new ClientSessionPacketBehaviours(this);
+		this.clientPacketBehaviours = new ClientSessionPacketBehaviours(this, (SPSConnection) spsConnection);
 		this.clientPacketBehaviours.registerDefaultBehaviours(clientSession);
 		this.clientPacketBehaviours.registerForwardingBehaviour(spsSession);
 
@@ -211,7 +211,26 @@ public class ClientProxySession implements IProxySessionNew {
 
 				isolatedPositions = test.getPolygonCorners(positions);
 
-//			if (isolatedPositions.toArray().length == 4) { //TODO will be square see above
+//			if (isolatedPositions.toArray().length == 164) { //TODO will be square see above
+//				/// ISOLATE 4 corners
+//				int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+//				int minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+//
+//				for (ChunkPosition pos : isolatedPositions) {
+//					minX = Math.min(minX, pos.getX());
+//					maxX = Math.max(maxX, pos.getX());
+//					minZ = Math.min(minZ, pos.getZ());
+//					maxZ = Math.max(maxZ, pos.getZ());
+//				}
+//
+//				Iterator<ChunkPosition> iterator = isolatedPositions.iterator();
+//				while (iterator.hasNext()) {
+//					ChunkPosition pos = iterator.next();
+//					if (!((pos.getX() == minX || pos.getX2() == maxX) && (pos.getZ() == minZ || pos.getZ2() == maxZ))) {
+//						iterator.remove();
+//					}
+//				}
+				////
 				SPSConnection _spsConnection = (SPSConnection) spsConnection;
 				_spsConnection.subscribePolygon(new ArrayList<>(isolatedPositions));
 //			}

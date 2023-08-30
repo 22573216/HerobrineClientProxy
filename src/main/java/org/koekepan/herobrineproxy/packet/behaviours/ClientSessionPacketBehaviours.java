@@ -64,9 +64,11 @@ import com.github.steveice10.mc.protocol.packet.status.client.StatusPingPacket;
 import com.github.steveice10.mc.protocol.packet.status.client.StatusQueryPacket;
 import com.github.steveice10.packetlib.packet.Packet;
 import org.koekepan.herobrineproxy.session.IServerSession;
+import org.koekepan.herobrineproxy.sps.SPSConnection;
 
 public class ClientSessionPacketBehaviours extends BehaviourHandler<Packet> {
 
+	private SPSConnection spsConnection = null;
 	private IClientSession clientSession;
 	private IProxySessionNew proxySession;
 	private ForwardPacketBehaviour serverForwarder;
@@ -75,13 +77,18 @@ public class ClientSessionPacketBehaviours extends BehaviourHandler<Packet> {
 	public ClientSessionPacketBehaviours(IProxySessionNew proxySession) {
 		this.proxySession = proxySession;
 	}
+
+	public ClientSessionPacketBehaviours(IProxySessionNew proxySession, SPSConnection spsConnection) {
+		this.proxySession = proxySession;
+		this.spsConnection = spsConnection;
+	}
 	
 
 	public void registerDefaultBehaviours(IClientSession clientSession) {
 		this.clientSession = clientSession;
 		clearBehaviours();
 		registerBehaviour(HandshakePacket.class, new ClientHandshakePacketBehaviour(this.clientSession));										// 0x06 Player Position And Look
-		registerBehaviour(LoginStartPacket.class, new ClientLoginStartPacketBehaviour(proxySession));												// 0x01 Login Start
+		registerBehaviour(LoginStartPacket.class, new ClientLoginStartPacketBehaviour(proxySession, spsConnection));												// 0x01 Login Start
 	}
 	
 	
